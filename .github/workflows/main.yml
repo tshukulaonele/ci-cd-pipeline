@@ -1,68 +1,61 @@
-name: CI/CD Pipeline
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
-jobs:
-  Explore-GitHub-Actions:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
-      
-      - name: CI/CD Pipeline
+name: CI/CD pipeline web app
 
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+
+jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          node-version: '14'  # Specify Node.js version
+          dotnet-version: 6.0.x
+          
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Build
+        run: dotnet build  --no-restore --configuration Release
+      
+      - name: Test
+        run: dotnet test --no-build --verbosity normal --configuration Release
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build project
-        run: npm run build
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-artifact
-          path: ./dist  # Specify path to build artifacts
-
-  # Step 2: Test Stage
-  test:
+  deploy:
     runs-on: ubuntu-latest
     needs: build
+    environment: staging
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test
-
-      - name: Run code coverage
-        run: npm run coverage
-
-      - name: Run code quality checks
-        run: npm run lint  # Example for linting (code analysis)
+        uses: actions/checkout@v4
+      
+      - name: Copy build artifacts
+        run: |
+          dotnet publish ./path/to/your/project.csproj -c Release -o ./publish
+          rm -rf "./CI/CD pipeline"
+          cp -r ./publish/* "./ pipeline-web-app"
+      
+      - name: Configure Git
+        run: |
+          git config --local user.email "20241785@ctucareer.co.za"
+          git config --local user.name "onele24"
+      
+      - name: Commit and push to staging
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git checkout -b staging || git checkout staging
+          git add .
+          git commit -m "Deploying to staging" || echo "No changes to commit."
+          git push origin staging # push to 'staging' branch
