@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup .NET
+      - name: Setup CI/CD
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 6.0.x
