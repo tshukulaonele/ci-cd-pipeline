@@ -48,7 +48,7 @@ jobs:
       
       - name: Configure Git
         run: |
-          git config --local user.email "20241785@ctucareer.co.za"
+          git config --local user.email "tshukulaonele@gmail.com"
           git config --local user.name "onele24"
       
       - name: Commit and push to staging
